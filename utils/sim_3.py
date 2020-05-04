@@ -40,7 +40,7 @@ def run_simulation(ct, phase_times, lost_time, flows, first_time, results_file, 
     if first_time == 1 or reset_vissim is True:
         Vissim = com.gencache.EnsureDispatch("Vissim.Vissim")
         Path_of_COM_Basic_Commands_network = os.getcwd()
-        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './vissim/third_intersection.inpx')
+        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './third_intersection.inpx')
         flag_read_additionally = False
         Vissim.LoadNet(Filename, flag_read_additionally)
 

@@ -1,43 +1,44 @@
 import win32com.client as com
 import os
 import sys
+
 global Vissim
 import time
 
 
-def generate_phase_times(ct,sf,flows,lt,n_phase,scheme='relative'):
-    phase_times = [0]*n_phase
-    if scheme =='relative':
-        for i in range(0,n_phase):
-            phase_times[i] = (flows[i]) * (ct-lt)
+def generate_phase_times(ct, sf, flows, lt, n_phase, scheme='relative'):
+    phase_times = [0] * n_phase
+    if scheme == 'relative':
+        for i in range(0, n_phase):
+            phase_times[i] = (flows[i]) * (ct - lt)
     elif scheme == 'fair':
-        for i in range(0,n_phase):
-            phase_times[i] = (0.25) * (ct-lt)
+        for i in range(0, n_phase):
+            phase_times[i] = (0.25) * (ct - lt)
     return phase_times
 
 
-def run_simulation(ct,phase_times,lost_time,flows,first_time,results_file, close_vissim=False, reset_vissim=False):
+def run_simulation(ct, phase_times, lost_time, flows, first_time, results_file, close_vissim=False, reset_vissim=False):
     import win32com.client as com
     global Vissim
-    sim_period = 3*60  # 60 minutes
+    sim_period = 3 * 60  # 60 minutes
     num_cycles = int(sim_period / ct)
     num_lanes = 3
     sat_rate = 1900
-    saturation_flow_rate = num_lanes * sat_rate #veh/hour
+    saturation_flow_rate = num_lanes * sat_rate  # veh/hour
     flows = [x * saturation_flow_rate for x in flows]
     vi_numbers = [1, 2, 3, 4]
     if first_time == 1 or reset_vissim is True:
         Vissim = com.gencache.EnsureDispatch("Vissim.Vissim")
         Path_of_COM_Basic_Commands_network = os.getcwd()
-        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './vissim/first_intersection.inpx')
-        flag_read_additionally  = False
+        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './first_intersection.inpx')
+        flag_read_additionally = False
         Vissim.LoadNet(Filename, flag_read_additionally)
 
     Vissim.Simulation.SetAttValue('SimBreakAt', 1)
-    Vissim.Simulation.SetAttValue('SimPeriod', sim_period+10)
-    #Vissim.Simulation.SetAttValue('UseMaxSimSpeed', True)
-    #Vissim.Graphics.CurrentNetworkWindow.SetAttValue("QuickMode", 1)
-    #Vissim.SuspendUpdateGUI()
+    Vissim.Simulation.SetAttValue('SimPeriod', sim_period + 10)
+    Vissim.Simulation.SetAttValue('UseMaxSimSpeed', True)
+    Vissim.Graphics.CurrentNetworkWindow.SetAttValue("QuickMode", 1)
+    Vissim.SuspendUpdateGUI()
     time.sleep(1)
     Vissim.Simulation.RunContinuous()  # start the simulation until SimBreakAt (1s)
     '''
@@ -51,38 +52,38 @@ def run_simulation(ct,phase_times,lost_time,flows,first_time,results_file, close
     decision_numbers = [1,1,2,2,3,3,4,4,1,2,3,4]
     routing_numbers = [1,3,1,2,1,2,1,2,2,3,3,3]
     counter = 0
-    
+
     for i in xrange(len(decision_numbers)):
         Vissim.Net.VehicleRoutingDecisionsStatic.ItemByKey(decision_numbers[counter]).VehRoutSta.ItemByKey(routing_numbers[counter]).SetAttValue(
         'RelFlow(1)', static_flows[counter])
     '''
     for vi_number in vi_numbers:
         veh_input = Vissim.Net.VehicleInputs.ItemByKey(vi_number)
-        veh_input.SetAttValue('Volume(1)', flows[vi_number-1])
+        veh_input.SetAttValue('Volume(1)', flows[vi_number - 1])
     SignalController = Vissim.Net.SignalControllers.ItemByKey(1)
-    sgs = [1,2,3,4]
+    sgs = [1, 2, 3, 4]
     green_times = phase_times
     break_time = 1
     green = "GREEN"
     yellow = "AMBER"  # possible values 'GREEN', 'RED', 'AMBER', 'REDAMBER' and more, see COM Help: SignalizationState Enumeration
     red = "RED"
-    yellow_time = lost_time/4
+    yellow_time = lost_time / 4
     for cycle in range(num_cycles):
         cntr = 0
         for sg in sgs:
             green_time = green_times[cntr]
-            cntr +=1
+            cntr += 1
             break_time += green_time
             if break_time < sim_period:
                 SignalGroup = SignalController.SGs.ItemByKey(sg)
                 SignalGroup.SetAttValue("SigState", green)
-                for other in [other for other in sgs if other!=sg]:
+                for other in [other for other in sgs if other != sg]:
                     SignalGroup = SignalController.SGs.ItemByKey(other)
                     SignalGroup.SetAttValue("SigState", red)
                 Vissim.Simulation.SetAttValue('SimBreakAt', break_time)
                 Vissim.Simulation.RunContinuous()
                 break_time += yellow_time
-                if break_time<sim_period:
+                if break_time < sim_period:
                     SignalGroup = SignalController.SGs.ItemByKey(sg)
                     SignalGroup.SetAttValue("SigState", red)
                     Vissim.Simulation.SetAttValue('SimBreakAt', break_time)
@@ -100,14 +101,14 @@ def run_simulation(ct,phase_times,lost_time,flows,first_time,results_file, close
                      "green_time(1),green_time(2),green_time(3),avgdelay,stopsPerVehicle,stopDelay," \
                      "emissionsco,fuelconsumption,stdev_delay,avg_qlen\n"
     row_data = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(ct, sum(flows), flows[0], flows[1],
-                                                                                flows[2], flows[3],lost_time,
+                                                                                flows[2], flows[3], lost_time,
                                                                                 green_times[0], green_times[1],
                                                                                 green_times[2], green_times[3],
                                                                                 avg_delay, stops, stop_delay,
                                                                                 emmissions_co, fuel_consumption,
-                                                                                stdev_delay,q_len)
+                                                                                stdev_delay, q_len)
 
-    if first_time==1:
+    if first_time == 1:
         with open(csv_filename, 'w') as csv:
             csv.write(columnTitleRow)
     with open(csv_filename, 'a') as csv:
@@ -117,11 +118,24 @@ def run_simulation(ct,phase_times,lost_time,flows,first_time,results_file, close
         Vissim = None
 
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '#'):
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='#'):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+    """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s\r' % (prefix, bar, percent, suffix))
     sys.stdout.flush()
+
+    # Print New Line on Complete
     if iteration == total:
         print()

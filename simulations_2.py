@@ -2,14 +2,10 @@ from utils.sim_2 import generate_phase_times, run_simulation, printProgressBar
 import sys
 import time
 import datetime
-import multiprocessing
-import win32com.client as com
-import os
 
 
 def main():
     global start_time
-    global Vissim
     start_time = time.time()
     fair_scheme = 'fair'
     relative_scheme = 'relative'
@@ -22,10 +18,10 @@ def main():
     flow_ratios = [[0.1,0.3,0.6],[0.6,0.3,0.1], [0.5,0.4,0.1], [0.35,0.35,0.3], [0.8, 0.1, 0.1],[0.2,0.4,0.4],[0.4,0.4,0.2],[0.3,0.6,0.1]]
     first_time = 1
     num_simulations = len(sum_flows)*len(lost_times)*len(c_times)*len(flow_ratios)*2
-    print("Starting to run {} simulations".format(num_simulations))
+    print(f"Starting to run {num_simulations} simulations")
     sim_number = 0
     total_flows = [1800, 3600,]
-    last_checkpoint = 454+1191+157
+    last_checkpoint = -1
     close_vis = False
     restart_vissim = False
     for sum_flow in sum_flows:

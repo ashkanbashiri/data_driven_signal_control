@@ -1,7 +1,6 @@
 import win32com.client as com
 import os
 import sys
-
 global Vissim
 import time
 import math
@@ -21,7 +20,6 @@ def generate_phase_times(ct, sf, flows, lt, n_phase, scheme='relative'):
 
 
 def run_simulation(ct, phase_times, lost_time, flows, first_time, results_file, close_vissim=False, reset_vissim=False):
-    import win32com.client as com
     global Vissim
     sim_period = 30 * 60  # 60 minutes
     num_cycles = int(sim_period / ct)
@@ -34,7 +32,7 @@ def run_simulation(ct, phase_times, lost_time, flows, first_time, results_file, 
     if first_time == 1 or reset_vissim is True:
         Vissim = com.gencache.EnsureDispatch("Vissim.Vissim")
         Path_of_COM_Basic_Commands_network = os.getcwd()
-        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './vissim/large_int.inpx')
+        Filename = os.path.join(Path_of_COM_Basic_Commands_network, './large_int.inpx')
         flag_read_additionally = False
         Vissim.LoadNet(Filename, flag_read_additionally)
 
@@ -44,7 +42,7 @@ def run_simulation(ct, phase_times, lost_time, flows, first_time, results_file, 
     Vissim.Simulation.SetAttValue('UseMaxSimSpeed', True)
     Vissim.Graphics.CurrentNetworkWindow.SetAttValue("QuickMode", 1)
     Vissim.SuspendUpdateGUI()
-    #time.sleep(1)
+    time.sleep(1)
     Vissim.Simulation.RunContinuous()
 
     # start the simulation until SimBreakAt (1s)
