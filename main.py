@@ -8,7 +8,6 @@ import numpy as np
 import time
 
 seed(1)
-tf.random.set_seed
 tf.random.set_seed(2)
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -16,9 +15,9 @@ pd.set_option('display.width', 1000)
 
 
 def main():
-    file_loc = './sim_results/second_intersection_nov19'
+    file_loc = './sim_results/results_sep17'
     df = pd.read_csv(file_loc+'.csv')
-    for i in range(2,3):
+    for i in range(2,25):
         temp_df = pd.read_csv(file_loc+'_'+str(i)+'.csv')
         df = pd.concat([df,temp_df])
 
@@ -37,6 +36,13 @@ def main():
     print(new_df.tail())
     print(train[to_predict].tail())
     #analyse(model,3200000)
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()

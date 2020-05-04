@@ -12,8 +12,8 @@ from keras.callbacks import TensorBoard
 
 
 def build_model(df,batch_size,n_epochs):
-    df.to_csv('./filtered_data_2.csv')
-    test_df = pd.read_csv('./to_predict_2.csv')
+    df.to_csv('./filtered_data.csv')
+    test_df = pd.read_csv('./to_predict.csv')
     x_test = np.column_stack((test_df['flow1'].values.tolist(), test_df['flow1'].values.tolist(),
                          test_df['flow3'].values.tolist(), test_df['flow4'].values.tolist(),
                          test_df['lost_time'].values.tolist()))
